@@ -208,4 +208,13 @@ With more time I would add:
 
 ## Learning notes
 
-For anything unfamiliar (here that means ArchUnit and Testcontainers) the approach is to read the official docs, try it in a small isolated test, and only then use it in the main code. Testcontainers earned its place because the concurrency and SQL behaviour should be checked against PostgreSQL itself.
+Two things in this project were new to me: Testcontainers and Spring's application events.
+
+**Testcontainers.** The concurrency and idempotency guarantees depend on PostgreSQL's row locking and `ON CONFLICT`, which an in-memory database like H2 doesn't reproduce faithfully. `VirtualCardIntegrationTest` starts a PostgreSQL 16 container, and Flyway runs the real migrations against it. The scenario that shows it works is 100 simultaneous spends of `20.00` against a `1000.00` balance: exactly 50 succeed, 50 are declined and the balance ends at `0.00`. One thing to watch is that the suite is skipped when Docker isn't running, so a green build on a machine without Docker doesn't prove those tests ran.
+
+**Spring application events.** Events keep work that isn't part of the money movement away from the code that moves the money, and they let modules react without knowing each other. There are two kinds of listener here:
+
+- `IssuanceRecorder` is a plain listener. It runs inside the issuing transaction, so a new card and its opening history entry commit together or not at all.
+- `AsyncAuditListener` uses `@Async` with `@TransactionalEventListener(AFTER_COMMIT)`. It only runs once the business transaction has committed, on another thread, and writes the audit row in its own transaction.
+
+The catch is that delivery is in-process and best effort, so an audit row can be lost if the app crashes between the commit and the write. That is why the outbox is the first step in the move to an event-driven design. `completedTransactionIsAuditedAsynchronously` and `cardLifecycleIsAuditedAsynchronously` in the integration suite check the behaviour.

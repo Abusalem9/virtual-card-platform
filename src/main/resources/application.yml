@@ -30,6 +30,9 @@ spring:
         await-termination-period: 20s
 
 app:
+  rate-limit:
+    requests-per-minute: ${RATE_LIMIT_RPM:120}
+    trust-forwarded-for: ${RATE_LIMIT_TRUST_FORWARDED_FOR:false}
   card-expiration:
     scan-interval-ms: ${CARD_EXPIRATION_SCAN_MS:60000}
 

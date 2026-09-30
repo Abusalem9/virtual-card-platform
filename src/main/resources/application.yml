@@ -29,6 +29,10 @@ spring:
         await-termination: true
         await-termination-period: 20s
 
+app:
+  card-expiration:
+    scan-interval-ms: ${CARD_EXPIRATION_SCAN_MS:60000}
+
 management:
   endpoints:
     web:

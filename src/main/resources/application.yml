@@ -18,6 +18,16 @@ spring:
           time_zone: UTC
   flyway:
     enabled: true
+  task:
+    execution:
+      pool:
+        core-size: 4
+        max-size: 8
+        queue-capacity: 1000
+      shutdown:
+        # Finish queued audit writes on shutdown instead of dropping them.
+        await-termination: true
+        await-termination-period: 20s
 
 management:
   endpoints:

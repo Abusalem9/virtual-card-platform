@@ -1,0 +1,12 @@
+build/
+target/
+.gradle/
+.idea/
+.vscode/
+*.iml
+*.class
+*.log
+hs_err_pid*
+replay_pid*
+.DS_Store
+.env

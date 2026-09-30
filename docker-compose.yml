@@ -1,0 +1,35 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: virtual-card-postgres
+    environment:
+      POSTGRES_DB: virtual_cards
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d virtual_cards"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    volumes:
+      - virtual_card_pgdata:/var/lib/postgresql/data
+
+  app:
+    build: .
+    container_name: virtual-card-app
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/virtual_cards
+      DB_USERNAME: postgres
+      DB_PASSWORD: postgres
+      RATE_LIMIT_RPM: 120
+      CARD_EXPIRATION_SCAN_MS: 60000
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  virtual_card_pgdata:
